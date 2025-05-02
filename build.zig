@@ -1,0 +1,19 @@
+const std = @import("std");
+
+pub fn build(b: *std.Build) void {
+    const target = b.standardTargetOptions(.{});
+    const optimize = b.standardOptimizeOption(.{});
+
+    const exe = b.addExecutable(.{
+        .name = "main",
+        .root_source_file = b.path("main.zig"),
+        .target = target,
+        .optimize = optimize,
+        .link_libc = true,
+    });
+
+    const serial = b.dependency("serial", .{.optimize = optimize});
+    exe.root_module.addImport("serial", serial.module("serial"));
+
+    b.installArtifact(exe);
+}

@@ -1,0 +1,19 @@
+.{
+    .name = .main,
+    .version = "0.0.1",
+    .fingerprint = 0xbf28cd64795ae1db,
+
+    .dependencies = .{
+        .serial = .{
+            .url = "git+https://github.com/ringtailsoftware/serial.git#ad338133eda8d86332718bbdc58c641a66307c84",
+            .hash = "12205ca7815f7c8e875ca38be8b7063ca99ea9f3780676b8f98626fffbb99bd40711",
+        },
+    },
+
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "main.zig",
+    },
+}
+
