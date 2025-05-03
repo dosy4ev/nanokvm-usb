@@ -12,8 +12,18 @@ pub fn build(b: *std.Build) void {
         .link_libc = true,
     });
 
-    const serial = b.dependency("serial", .{.optimize = optimize});
+    const serial = b.dependency("serial", .{
+        .target = target,
+        .optimize = optimize,
+    });
     exe.root_module.addImport("serial", serial.module("serial"));
+
+    const raylib = b.dependency("raylib_zig", .{
+        .target = target,
+        .optimize = optimize,
+    });
+    exe.root_module.addImport("raylib", raylib.module("raylib"));
+    exe.linkLibrary(raylib.artifact("raylib"));
 
     b.installArtifact(exe);
 }

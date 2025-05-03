@@ -1,6 +1,9 @@
 const std = @import("std");
 const mem = std.mem;
+const ArrayList = std.ArrayList;
+
 const zig_serial = @import("serial");
+const rl = @import("raylib");
 
 const proto = @import("./proto.zig");
 
@@ -27,7 +30,35 @@ pub fn main() !u8 {
         .handshake = .none,
     });
 
-    try proto.send_key_single(allocator, serial.writer(), 0, 0x2c);
+    //try proto.send_key_single(allocator, serial.writer(), 0, 0x2c);
+
+    const screenWidth = 800;
+    const screenHeight = 450;
+
+    rl.initWindow(screenWidth, screenHeight, "Nanokvm");
+    rl.setTargetFPS(60);
+    defer rl.closeWindow();
+
+    while (!rl.windowShouldClose()) {
+        var keycodes = ArrayList(rl.KeyboardKey).init(allocator);
+        inline for (std.meta.fields(rl.KeyboardKey)) |key| {
+            const keycode : rl.KeyboardKey = @enumFromInt(key.value);
+            if (rl.isKeyDown(keycode)) {
+                try keycodes.append(keycode);
+            }
+        }
+
+        rl.beginDrawing();
+        defer rl.endDrawing();
+
+        rl.clearBackground(.ray_white);
+        if (keycodes.items.len == 0) {
+            rl.drawText("no keys were pressed", 10, 10, 20, .dark_gray);
+        }
+        for (keycodes.items, 0..) |_, i| {
+            rl.drawText("keycode was pressed", 10, @intCast(20 * i + 10), 20, .dark_gray);
+        } 
+    }
 
     return 0;
 }
