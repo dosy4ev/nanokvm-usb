@@ -8,20 +8,15 @@ const rl = @import("raylib");
 const proto = @import("./proto.zig");
 const keymapping = @import("./keycodes.zig");
 
-pub fn main() !u8 {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    const allocator = gpa.allocator();
-
-    const port_name = "/dev/ttyUSB1";
-
-    var serial = std.fs.cwd().openFile(port_name, .{ .mode = .read_write }) catch |err| switch (err) {
+fn open_serial_port(port_name : []const u8) !std.fs.File {
+    var serial = std.fs.openFileAbsolute(port_name, .{ .mode = .read_write }) catch |err| switch (err) {
         error.FileNotFound => {
             std.debug.print("{s} does not exist\n", .{port_name});
-            return 1;
+            return err;
         },
         else => return err,
     };
-    defer serial.close();
+    errdefer serial.close();
 
     try zig_serial.configureSerialPort(serial, zig_serial.SerialConfig{
         .baud_rate = 57600,
@@ -30,6 +25,18 @@ pub fn main() !u8 {
         .stop_bits = .one,
         .handshake = .none,
     });
+
+    return serial;
+}
+
+pub fn main() !u8 {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+
+    const port_name = "/dev/ttyUSB1";
+
+    var serial = try open_serial_port(port_name);
+    defer serial.close();
 
     const screenWidth = 800;
     const screenHeight = 450;
