@@ -6,6 +6,7 @@ const zig_serial = @import("serial");
 const rl = @import("raylib");
 
 const proto = @import("./proto.zig");
+const keymapping = @import("./keycodes.zig");
 
 pub fn main() !u8 {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
@@ -30,8 +31,6 @@ pub fn main() !u8 {
         .handshake = .none,
     });
 
-    //try proto.send_key_single(allocator, serial.writer(), 0, 0x2c);
-
     const screenWidth = 800;
     const screenHeight = 450;
 
@@ -40,11 +39,12 @@ pub fn main() !u8 {
     defer rl.closeWindow();
 
     while (!rl.windowShouldClose()) {
-        var keycodes = ArrayList(rl.KeyboardKey).init(allocator);
-        inline for (std.meta.fields(rl.KeyboardKey)) |key| {
-            const keycode : rl.KeyboardKey = @enumFromInt(key.value);
-            if (rl.isKeyDown(keycode)) {
-                try keycodes.append(keycode);
+        while (true) {
+            const key = rl.getKeyPressed();
+            if (key == .null) break;
+
+            if (keymapping.get(key)) |value| {
+                try proto.send_key_single(allocator, serial.writer(), 0, value);
             }
         }
 
@@ -52,12 +52,7 @@ pub fn main() !u8 {
         defer rl.endDrawing();
 
         rl.clearBackground(.ray_white);
-        if (keycodes.items.len == 0) {
-            rl.drawText("no keys were pressed", 10, 10, 20, .dark_gray);
-        }
-        for (keycodes.items, 0..) |_, i| {
-            rl.drawText("keycode was pressed", 10, @intCast(20 * i + 10), 20, .dark_gray);
-        } 
+        rl.drawText("Hello!", 10, 10, 20, .dark_gray);
     }
 
     return 0;
