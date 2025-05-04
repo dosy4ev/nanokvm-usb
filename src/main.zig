@@ -8,6 +8,10 @@ const rl = @import("raylib");
 const proto = @import("./proto.zig");
 const keymapping = @import("./keycodes.zig");
 
+const c = @cImport({
+    @cInclude("raymedia.h");
+});
+
 fn open_serial_port(port_name : []const u8) !std.fs.File {
     var serial = std.fs.openFileAbsolute(port_name, .{ .mode = .read_write }) catch |err| switch (err) {
         error.FileNotFound => {
@@ -60,6 +64,9 @@ pub fn main() !u8 {
     rl.setTargetFPS(60);
     defer rl.closeWindow();
 
+    var media = c.LoadMedia("test.mp4");
+    defer c.UnloadMedia(&media);
+
     while (!rl.windowShouldClose()) {
         while (true) {
             const key = rl.getKeyPressed();
@@ -71,10 +78,13 @@ pub fn main() !u8 {
             }
         }
 
+        _ = c.UpdateMedia(&media);
+
         rl.beginDrawing();
         defer rl.endDrawing();
 
         rl.clearBackground(.ray_white);
+        rl.drawTextureEx(@as(*rl.Texture, @ptrCast(&media.videoTexture)).*, .{.x = 0, .y = 0}, 0, 0.5, .white);
         rl.drawText("Hello!", 10, 10, 20, .dark_gray);
     }
 
