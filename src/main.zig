@@ -29,6 +29,21 @@ fn open_serial_port(port_name : []const u8) !std.fs.File {
     return serial;
 }
 
+pub fn get_modifier() u8 {
+    const modifier = keymapping.Modifier{
+	.left_control = rl.isKeyDown(rl.KeyboardKey.left_control), 
+	.left_shift = rl.isKeyDown(rl.KeyboardKey.left_shift), 
+	.left_alt = rl.isKeyDown(rl.KeyboardKey.left_alt), 
+	.left_super = rl.isKeyDown(rl.KeyboardKey.left_super), 
+	.right_control = rl.isKeyDown(rl.KeyboardKey.right_control), 
+	.right_shift = rl.isKeyDown(rl.KeyboardKey.right_shift), 
+	.right_alt = rl.isKeyDown(rl.KeyboardKey.right_alt), 
+	.right_super = rl.isKeyDown(rl.KeyboardKey.right_super), 
+    };
+
+    return modifier.as_u8();
+}
+
 pub fn main() !u8 {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
@@ -51,7 +66,8 @@ pub fn main() !u8 {
             if (key == .null) break;
 
             if (keymapping.get(key)) |value| {
-                try proto.send_key_single(allocator, serial.writer(), 0, value);
+                std.debug.print("{d}\n", .{get_modifier()});
+                try proto.send_key_single(allocator, serial.writer(), get_modifier(), value);
             }
         }
 
