@@ -10,6 +10,9 @@ const keymapping = @import("./keycodes.zig");
 
 const c = @cImport({
     @cInclude("raymedia.h");
+    @cInclude("libavformat/avformat.h");
+    @cInclude("libavdevice/avdevice.h");
+    @cInclude("libavutil/dict.h");
 });
 
 fn open_serial_port(port_name : []const u8) !std.fs.File {
@@ -52,7 +55,16 @@ pub fn main() !u8 {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
 
-    const port_name = "/dev/ttyUSB1";
+    const argv = try std.process.argsAlloc(allocator);
+    defer std.process.argsFree(allocator, argv);
+
+    if (argv.len < 3) {
+        std.debug.print("Usage: {s} serial_port video_device\n", .{argv[0]});
+        return 1;
+    }
+
+    const port_name = argv[1];
+    const video_dev = argv[2];
 
     var serial = try open_serial_port(port_name);
     defer serial.close();
@@ -62,9 +74,14 @@ pub fn main() !u8 {
 
     rl.initWindow(screenWidth, screenHeight, "Nanokvm");
     rl.setTargetFPS(60);
+    rl.setWindowState(rl.ConfigFlags{
+        .window_resizable = true,
+    });
     defer rl.closeWindow();
 
-    var media = c.LoadMedia("test.mp4");
+    c.avdevice_register_all();
+
+    var media = c.LoadMedia(video_dev);
     defer c.UnloadMedia(&media);
 
     while (!rl.windowShouldClose()) {
@@ -73,7 +90,6 @@ pub fn main() !u8 {
             if (key == .null) break;
 
             if (keymapping.get(key)) |value| {
-                std.debug.print("{d}\n", .{get_modifier()});
                 try proto.send_key_single(allocator, serial.writer(), get_modifier(), value);
             }
         }
@@ -84,8 +100,20 @@ pub fn main() !u8 {
         defer rl.endDrawing();
 
         rl.clearBackground(.ray_white);
-        rl.drawTextureEx(@as(*rl.Texture, @ptrCast(&media.videoTexture)).*, .{.x = 0, .y = 0}, 0, 0.5, .white);
-        rl.drawText("Hello!", 10, 10, 20, .dark_gray);
+
+        const source_rec = rl.Rectangle{
+            .x = 0,
+            .y = 0,
+            .width = @floatFromInt(media.videoTexture.width),
+            .height = @floatFromInt(media.videoTexture.height),
+        };
+        const dest_rec = rl.Rectangle{
+            .x = 0,
+            .y = 0,
+            .width = @floatFromInt(rl.getScreenWidth()),
+            .height = @floatFromInt(rl.getScreenHeight()),
+        };
+        rl.drawTexturePro(@as(*rl.Texture, @ptrCast(&media.videoTexture)).*, source_rec, dest_rec, .{.x = 0, .y = 0}, 0, .white);
     }
 
     return 0;

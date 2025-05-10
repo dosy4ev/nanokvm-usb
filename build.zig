@@ -36,7 +36,7 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
     });
-    const raylib_media_dep = b.dependency("raylib-media", .{
+    const raylib_media_dep = b.dependency("raylib_media", .{
         .target = target,
         .optimize = optimize,
     });
@@ -44,14 +44,13 @@ pub fn build(b: *std.Build) void {
         .root = raylib_media_dep.path("src"),
         .files = &.{"rmedia.c"},
     });
-    // todo raylib media should use "" for raymedia.h instead of <>
-    raylib_media.addSystemIncludePath(raylib_media_dep.path("src"));
     raylib_media.installHeadersDirectory(raylib_media_dep.path("src"), "", .{
         .include_extensions = &.{"raymedia.h"},
     });
     raylib_media.linkLibC();
     exe.linkLibrary(raylib_media);
     exe.linkSystemLibrary("avcodec");
+    exe.linkSystemLibrary("avdevice");
     exe.linkSystemLibrary("avformat");
     exe.linkSystemLibrary("avutil");
     exe.linkSystemLibrary("swresample");

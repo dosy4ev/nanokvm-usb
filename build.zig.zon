@@ -12,9 +12,9 @@
             .url = "git+https://github.com/Not-Nik/raylib-zig?ref=devel#2e60ac0127b84e0d6b34343ef5f682465705fc80",
             .hash = "raylib_zig-5.6.0-dev-KE8REGMrBQCs5X69dptNzjw9Z7MYM1fgdaKrnuKf8zyr",
         },
-        .@"raylib-media" = .{
-            .url = "git+https://github.com/cloudofoz/raylib-media.git#9d99257a9a57845db5db5cc1689df2adff65c863",
-            .hash = "N-V-__8AAM4XmQEDELYcLAq3WiRHwqtyN0XaggNNL7N0v0IB",
+        .raylib_media = .{
+            .url = "git+https://github.com/cloudofoz/raylib-media.git#56ead2f3e76e3377f9c3b9808e62b200395a8eac",
+            .hash = "N-V-__8AANgXmQFpJJQ4UCLLzSLzsnJVSGvM7Wq_JvgEqhPH",
         },
     },
 
